@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>🛒 Meu Carrinho de Compras - Visualização</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background: #e5e7eb;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .phone-frame {
+      width: 375px;
+      height: 812px;
+      background: #f3f4f6;
+      border-radius: 40px;
+      border: 12px solid #1f2937;
+      overflow: hidden;
+      position: relative;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.25);
+    }
+    .phone-frame::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%; transform: translateX(-50%);
+      width: 150px; height: 28px;
+      background: #1f2937;
+      border-radius: 0 0 20px 20px;
+      z-index: 100;
+    }
+    .app-container {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .app-container::-webkit-scrollbar,
+    .product-list::-webkit-scrollbar { display: none; }
+
+    /* HEADER */
+    .header {
+      background: #2563eb;
+      padding: 45px 16px 16px;
+      border-radius: 0 0 16px 16px;
+      flex-shrink: 0;
+    }
+    .header-title {
+      font-size: 22px;
+      font-weight: bold;
+      color: #fff;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .input-box {
+      background: #fff;
+      border-radius: 8px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+    }
+    .input-box label {
+      font-size: 11px;
+      color: #6b7280;
+      display: block;
+      margin-bottom: 3px;
+      font-weight: 600;
+    }
+    .input-box input {
+      width: 100%;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      color: #1f2937;
+      background: transparent;
+    }
+    .input-box input::placeholder { color: #d1d5db; }
+
+    /* ADD FORM */
+    .add-form {
+      background: #fff;
+      margin: 12px;
+      padding: 12px;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    .add-form-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #374151;
+      margin-bottom: 8px;
+    }
+    .add-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .add-input {
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 14px;
+      outline: none;
+    }
+    .add-input:focus { border-color: #2563eb; }
+    .add-name { flex: 1; }
+    .add-price { flex: 1; }
+    .add-qty { width: 55px; text-align: center; }
+    .add-btn {
+      background: #2563eb;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 36px;
+      height: 36px;
+      font-weight: bold;
+      font-size: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .add-btn:hover { background: #1d4ed8; }
+
+    /* SUGGESTIONS LIST */
+    .suggestions-list {
+      position: absolute;
+      top: 38px;
+      left: 0;
+      right: 0;
+      background: #fff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      max-height: 180px;
+      overflow-y: auto;
+      z-index: 999;
+    }
+    .suggestion-item {
+      padding: 10px 12px;
+      font-size: 14px;
+      color: #1f2937;
+      cursor: pointer;
+      border-bottom: 1px solid #f3f4f6;
+      text-align: left;
+    }
+    .suggestion-item:last-child {
+      border-bottom: none;
+    }
+    .suggestion-item:hover {
+      background: #f3f4f6;
+    }
+
+    /* PRODUCT LIST */
+    .product-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 12px;
+    }
+    .product-card {
+      background: #fff;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    .product-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .product-name-wrap { flex: 1; }
+    .product-label {
+      font-size: 11px;
+      color: #6b7280;
+      font-weight: 600;
+      display: block;
+      margin-bottom: 2px;
+    }
+    .product-name-input {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 16px;
+      color: #1f2937;
+      outline: none;
+      padding: 3px 0;
+    }
+    .delete-btn {
+      color: #ef4444;
+      font-weight: bold;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 4px;
+      background: none;
+      border: none;
+    }
+    .product-field {
+      flex: 1;
+    }
+    .product-field input {
+      width: 100%;
+      border: none;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 14px;
+      color: #1f2937;
+      outline: none;
+      padding: 4px 0;
+    }
+    .qty-controls {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      border-bottom: 1px solid #e5e7eb;
+      padding: 2px 0;
+    }
+    .qty-btn {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      border: none;
+      color: #2563eb;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .qty-input {
+      width: 36px;
+      text-align: center;
+      border: none;
+      font-size: 15px;
+      outline: none;
+      background: transparent;
+    }
+    .subtotal-wrap {
+      text-align: right;
+      min-width: 80px;
+    }
+    .subtotal-value {
+      font-size: 14px;
+      font-weight: bold;
+      color: #059669;
+    }
+
+    /* FOOTER */
+    .footer {
+      background: #fff;
+      border-radius: 16px 16px 0 0;
+      padding: 16px;
+      margin-top: 8px;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+      flex-shrink: 0;
+    }
+    .summary-row {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 14px;
+    }
+    .summary-item { text-align: center; }
+    .summary-label {
+      font-size: 12px;
+      color: #6b7280;
+      font-weight: 600;
+    }
+    .summary-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1f2937;
+    }
+    .over-budget { color: #ef4444 !important; }
+    .under-budget { color: #059669 !important; }
+    .calculator {
+      background: #f9fafb;
+      border-radius: 12px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .calc-title {
+      font-size: 14px;
+      font-weight: bold;
+      color: #374151;
+      text-align: center;
+      margin-bottom: 8px;
+    }
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    .calc-label { color: #6b7280; }
+    .calc-value { font-weight: 600; color: #1f2937; }
+    .positive { color: #059669; }
+    .negative { color: #ef4444; }
+    .calc-divider {
+      height: 1px;
+      background: #e5e7eb;
+      margin: 8px 0;
+    }
+    .clear-btn {
+      width: 100%;
+      background: #fee2e2;
+      color: #ef4444;
+      border: none;
+      border-radius: 8px;
+      padding: 10px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .clear-btn:hover { background: #fecaca; }
+
+    .empty-msg {
+      text-align: center;
+      color: #9ca3af;
+      padding: 30px 0;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="phone-frame">
+    <div class="app-container" id="app">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-title">🛒 Meu Carrinho</div>
+        <div class="input-box">
+          <label>Nome do Mercado</label>
+          <input type="text" id="marketName" placeholder="Ex: Supermercado X" oninput="updateHeader()">
+        </div>
+        <div class="input-box">
+          <label>Valor Disponível (R$)</label>
+          <input type="text" id="budget" placeholder="0,00" oninput="updateBudget(this.value)">
+        </div>
+      </div>
+
+      <!-- Add Product Form -->
+      <div class="add-form" style="position: relative; z-index: 10;">
+        <div class="add-form-title">➕ Adicionar Produto</div>
+        <div class="add-row" style="position: relative;">
+          <input type="text" id="newName" class="add-input add-name" placeholder="Nome do produto" oninput="handleNameInput(this.value)" onblur="handleNameBlur()" autocomplete="off">
+          <div id="suggestions" class="suggestions-list" style="display: none;"></div>
+        </div>
+        <div class="add-row">
+          <input type="text" id="newPrice" class="add-input add-price" placeholder="Preço (R$)">
+          <input type="text" id="newQty" class="add-input add-qty" value="1">
+          <button class="add-btn" onclick="addProduct()">+</button>
+        </div>
+      </div>
+
+      <!-- Product List -->
+      <div class="product-list" id="productList"></div>
+
+      <!-- Footer -->
+      <div class="footer" id="footer" style="display:none">
+        <div class="summary-row">
+          <div class="summary-item">
+            <div class="summary-label">Itens</div>
+            <div class="summary-value" id="totalItems">0</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Total</div>
+            <div class="summary-value" id="totalCost">R$ 0,00</div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-label">Restante</div>
+            <div class="summary-value" id="remaining">R$ 0,00</div>
+          </div>
+        </div>
+        <div class="calculator">
+          <div class="calc-title">📟 Calculadora</div>
+          <div class="calc-row">
+            <span class="calc-label">Orçamento:</span>
+            <span class="calc-value" id="calcBudget">R$ 0,00</span>
+          </div>
+          <div class="calc-row">
+            <span class="calc-label">Total gasto:</span>
+            <span class="calc-value negative" id="calcSpent">− R$ 0,00</span>
+          </div>
+          <div class="calc-divider"></div>
+          <div class="calc-row">
+            <span class="calc-label">Saldo:</span>
+            <span class="calc-value" id="calcBalance">R$ 0,00</span>
+          </div>
+        </div>
+        <button class="clear-btn" onclick="clearAll()">Limpar Lista</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let products = [];
+    let budget = 0;
+    let marketName = '';
+
+    const commonProducts = [
+      'Abacate', 'Abacaxi', 'Abóbora', 'Abobrinha', 'Açaí', 'Açúcar', 'Açúcar Mascavo', 'Adoçante', 'Agrião', 'Água de Coco',
+      'Água Mineral', 'Água Sanitária', 'Alface', 'Alho', 'Almôndegas', 'Alvejante', 'Amaciante', 'Amendoim', 'Amido de Milho',
+      'Apontador', 'Arroz', 'Arroz Integral', 'Aveia', 'Azeite de Oliva', 'Azeitona', 'Bacon', 'Banana', 'Batata',
+      'Batata Doce', 'Batata Palha', 'Beringela', 'Beterraba', 'Bicarbonato', 'Biscoito', 'Biscoito Recheado', 'Bisnaguinha',
+      'Boca de Anjo', 'Bolacha', 'Bolo', 'Brócolis', 'Café', 'Café Solúvel', 'Calabresa', 'Camarão', 'Canela',
+      'Carne Bovina', 'Carne de Porco', 'Carne Moída', 'Carvão', 'Catchup', 'Cebola', 'Cenoura', 'Cereais', 'Cerveja',
+      'Chá', 'Cheiro Verde', 'Chocolate', 'Chocolate em Pó', 'Chouriço', 'Cloro', 'Coco Ralado', 'Coentro', 'Cogumelo',
+      'Colgate', 'Couve', 'Couve-Flor', 'Creme de Leite', 'Creme Dental', 'Desinfetante', 'Desodorante', 'Detergente',
+      'Doce de Leite', 'Erva-Mate', 'Ervilha', 'Escova de Dente', 'Espinafre', 'Esponja de Aço', 'Esponja de Pia',
+      'Extrato de Tomate', 'Farinha de Aveia', 'Farinha de Mandioca', 'Farinha de Milho', 'Farinha de Rosca',
+      'Farinha de Trigo', 'Feijão', 'Feijão Preto', 'Fermento', 'Fio Dental', 'Flan', 'Fósforo', 'Frango',
+      'Frango (Filé)', 'Frango Inteiro', 'Gel de Cabelo', 'Geladeira (Filtro)', 'Gelatina', 'Geleia', 'Gelo', 'Gergelim',
+      'Granola', 'Guardanapo', 'Hambúrguer', 'Hortelã', 'Iogurte', 'Iogurte Natural', 'Inseticida', 'Laranja',
+      'Lasanha (Massa)', 'Leite', 'Leite Condensado', 'Leite de Coco', 'Leite em Pó', 'Leite Integral', 'Limão',
+      'Limpa Vidros', 'Linguiça', 'Lustra Móveis', 'Maçã', 'Macarrão', 'Macarrão Instantâneo', 'Mamão', 'Mandioca',
+      'Manteiga', 'Maracujá', 'Margarina', 'Maionese', 'Mel', 'Melancia', 'Melão', 'Milho', 'Milho para Pipoca',
+      'Molho de Pimenta', 'Molho de Tomate', 'Molho Inglês', 'Mortadela', 'Mostarda', 'Mussarela', 'Nabo', 'Nescau',
+      'Noz-Moscada', 'Óleo de Soja', 'Óleo de Girassol', 'Orégano', 'Ovos', 'Palmito', 'Pão', 'Pão de Alho',
+      'Pão de Forma', 'Pão Francês', 'Pão Integral', 'Papel Alumínio', 'Papel Higiênico', 'Papel Manteiga',
+      'Papel Toalha', 'Passas', 'Pastel (Massa)', 'Patê', 'Peito de Peru', 'Peixe', 'Pepino', 'Pera', 'Pêssego',
+      'Picles', 'Pimenta', 'Pimenta do Reino', 'Pipoca', 'Polvilho Doce', 'Polvilho Azedo', 'Presunto', 'Queijo',
+      'Queijo Ralado', 'Queijo Prato', 'Quinoa', 'Rabanete', 'Refrigerante', 'Requeijão', 'Rúcula', 'Sabão em Barra',
+      'Sabão em Pó', 'Sabão Líquido', 'Sabonete', 'Saco de Lixo', 'Sal', 'Sal Grosso', 'Salsa', 'Salsicha',
+      'Sardinha', 'Sardinha em Lata', 'Semolina', 'Shampoo', 'Shoyu', 'Soda Cáustica', 'Sorvete', 'Suco',
+      'Suco Concentrado', 'Suco de Caixa', 'Suco em Pó', 'Tapioca', 'Tequila', 'Tomate', 'Trigo para Kibe',
+      'Torrada', 'Uva', 'Vassoura', 'Vela', 'Vinagre', 'Vinho', 'Vodka', 'Yogurte'
+    ];
+
+    function handleNameInput(value) {
+      const sugEl = document.getElementById('suggestions');
+      const val = value.trim().toLowerCase();
+      if (val.length < 2) {
+        sugEl.style.display = 'none';
+        return;
+      }
+
+      const filtered = commonProducts.filter(item => 
+        item.toLowerCase().includes(val) && item.toLowerCase() !== val
+      ).slice(0, 5);
+
+      if (filtered.length === 0) {
+        sugEl.style.display = 'none';
+        return;
+      }
+
+      sugEl.innerHTML = filtered.map(item => `
+        <div class="suggestion-item" onclick="selectSuggestion('${item.replace(/'/g, "\\'")}')">${item}</div>
+      `).join('');
+      sugEl.style.display = 'block';
+    }
+
+    function selectSuggestion(value) {
+      document.getElementById('newName').value = value;
+      document.getElementById('suggestions').style.display = 'none';
+    }
+
+    function handleNameBlur() {
+      setTimeout(() => {
+        document.getElementById('suggestions').style.display = 'none';
+      }, 200);
+    }
+
+    function formatMoney(value) {
+      return 'R$ ' + value.toFixed(2).replace('.', ',');
+    }
+
+    function parseMoney(text) {
+      const val = parseFloat(text.replace(',', '.').replace(/[^0-9.]/g, ''));
+      return isNaN(val) ? 0 : val;
+    }
+
+    function updateBudget(value) {
+      budget = parseMoney(value);
+      render();
+    }
+
+    function updateHeader() {
+      marketName = document.getElementById('marketName').value;
+    }
+
+    function addProduct() {
+      const name = document.getElementById('newName').value.trim();
+      const price = parseMoney(document.getElementById('newPrice').value);
+      const qty = parseInt(document.getElementById('newQty').value) || 1;
+      if (!name) return;
+
+      products.unshift({ id: Date.now(), name, price, quantity: qty });
+      document.getElementById('newName').value = '';
+      document.getElementById('newPrice').value = '';
+      document.getElementById('newQty').value = '1';
+      document.getElementById('suggestions').style.display = 'none';
+      render();
+    }
+
+    function removeProduct(id) {
+      products = products.filter(p => p.id !== id);
+      render();
+    }
+
+    function updateProduct(id, field, value) {
+      const p = products.find(p => p.id === id);
+      if (!p) return;
+      if (field === 'name') p.name = value;
+      if (field === 'price') p.price = parseMoney(value);
+      if (field === 'quantity') p.quantity = parseInt(value) || 0;
+      render();
+    }
+
+    function changeQty(id, delta) {
+      const p = products.find(p => p.id === id);
+      if (!p) return;
+      p.quantity = Math.max(0, p.quantity + delta);
+      if (p.quantity === 0) {
+        removeProduct(id);
+        return;
+      }
+      render();
+    }
+
+    function clearAll() {
+      products = [];
+      render();
+    }
+
+    function render() {
+      const list = document.getElementById('productList');
+      const footer = document.getElementById('footer');
+
+      if (products.length === 0) {
+        list.innerHTML = '<div class="empty-msg">Nenhum produto no carrinho.<br>Adicione um produto acima! 🛒</div>';
+        footer.style.display = 'none';
+        return;
+      }
+
+      footer.style.display = 'block';
+      list.innerHTML = products.map(p => {
+        const subtotal = p.price * p.quantity;
+        return `
+          <div class="product-card">
+            <div class="product-row">
+              <div class="product-name-wrap">
+                <span class="product-label">Produto</span>
+                <input class="product-name-input" value="${p.name}" onchange="updateProduct(${p.id}, 'name', this.value)">
+              </div>
+              <button class="delete-btn" onclick="removeProduct(${p.id})">✕</button>
+            </div>
+            <div class="product-row">
+              <div class="product-field">
+                <span class="product-label">Preço (R$)</span>
+                <input value="${p.price > 0 ? p.price.toFixed(2).replace('.', ',') : ''}" placeholder="0,00" onchange="updateProduct(${p.id}, 'price', this.value)">
+              </div>
+              <div class="product-field">
+                <span class="product-label">Qtd</span>
+                <div class="qty-controls">
+                  <button class="qty-btn" onclick="changeQty(${p.id}, -1)">−</button>
+                  <input class="qty-input" value="${p.quantity}" onchange="updateProduct(${p.id}, 'quantity', this.value)">
+                  <button class="qty-btn" onclick="changeQty(${p.id}, 1)">+</button>
+                </div>
+              </div>
+              <div class="subtotal-wrap">
+                <span class="product-label">Subtotal</span>
+                <div class="subtotal-value">${formatMoney(subtotal)}</div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const totalItems = products.reduce((s, p) => s + p.quantity, 0);
+      const totalCost = products.reduce((s, p) => s + p.price * p.quantity, 0);
+      const remaining = budget - totalCost;
+      const overBudget = remaining < 0 && budget > 0;
+
+      document.getElementById('totalItems').textContent = totalItems;
+      document.getElementById('totalCost').textContent = formatMoney(totalCost);
+      const remEl = document.getElementById('remaining');
+      remEl.textContent = formatMoney(remaining);
+      remEl.className = 'summary-value ' + (overBudget ? 'over-budget' : 'under-budget');
+
+      document.getElementById('calcBudget').textContent = formatMoney(budget);
+      document.getElementById('calcSpent').textContent = '− ' + formatMoney(totalCost);
+      const balEl = document.getElementById('calcBalance');
+      balEl.textContent = formatMoney(remaining);
+      balEl.className = 'calc-value ' + (overBudget ? 'negative' : 'positive');
+    }
+
+    render();
+  </script>
+</body>
+</html>
