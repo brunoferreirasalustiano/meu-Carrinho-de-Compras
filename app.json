@@ -4,19 +4,19 @@
     "slug": "meu-carrinho-de-compras",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.corey.meucarrinho"
     },
     "android": {
       "package": "com.corey.meucarrinho"
     },
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "af455184-0edf-47f8-8254-701910e53bc2"
       }
     }
   }

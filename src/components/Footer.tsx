@@ -1,80 +1,118 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useShopping } from '../context/ShoppingContext';
+import { useTranslation } from '../i18n/useTranslation';
+import { useCurrency } from '../utils/formatMoney';
 
 export default function Footer() {
+  const { t } = useTranslation();
+  const { formatMoney } = useCurrency();
   const { totalItems, totalCost, remainingBudget, state, clearProducts } = useShopping();
   const isOverBudget = remainingBudget < 0 && state.budget > 0;
+  const hasBudget = state.budget > 0;
 
   const handleClear = () => {
     Alert.alert(
-      "Limpar Lista",
-      "Tem certeza que deseja remover todos os produtos?",
+      t('clearListTitle'),
+      t('clearListMessage'),
       [
-        { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Limpar", 
-          onPress: clearProducts, 
-          style: "destructive" 
-        }
+        { text: t('cancel'), style: 'cancel' },
+        {
+          text: t('clear'),
+          onPress: clearProducts,
+          style: 'destructive',
+        },
       ]
     );
   };
 
+  if (totalItems === 0) return null;
+
   return (
     <View style={styles.container}>
+      {/* Resumo rápido: Itens / Total / Restante */}
       <View style={styles.summaryRow}>
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Itens</Text>
+          <Text style={styles.summaryLabel}>{t('items')}</Text>
           <Text style={styles.summaryValue}>{totalItems}</Text>
         </View>
+        <View style={styles.summaryDivider} />
         <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Total</Text>
-          <Text style={styles.summaryValue}>R$ {totalCost.toFixed(2).replace('.', ',')}</Text>
+          <Text style={styles.summaryLabel}>{t('total')}</Text>
+          <Text style={styles.summaryValue}>{formatMoney(totalCost)}</Text>
         </View>
-        <View style={styles.summaryItem}>
-          <Text style={styles.summaryLabel}>Restante</Text>
-          <Text style={[styles.summaryValue, isOverBudget ? styles.overBudget : styles.underBudget]}>
-            R$ {remainingBudget.toFixed(2).replace('.', ',')}
-          </Text>
-        </View>
+        {hasBudget && (
+          <>
+            <View style={styles.summaryDivider} />
+            <View style={styles.summaryItem}>
+              <Text style={styles.summaryLabel}>{t('remaining')}</Text>
+              <Text
+                style={[
+                  styles.summaryValue,
+                  isOverBudget ? styles.overBudget : styles.underBudget,
+                ]}
+              >
+                {formatMoney(remainingBudget)}
+              </Text>
+            </View>
+          </>
+        )}
       </View>
 
-      <View style={styles.calculator}>
-        <Text style={styles.calculatorTitle}>📟 Calculadora</Text>
-        <View style={styles.calcRow}>
-          <Text style={styles.calcLabel}>Orçamento:</Text>
-          <Text style={styles.calcValue}>R$ {state.budget.toFixed(2).replace('.', ',')}</Text>
+      {/* Calculadora detalhada — exibe só se tiver orçamento definido */}
+      {hasBudget && (
+        <View style={styles.calculator}>
+          <Text style={styles.calculatorTitle}>{t('calculatorTitle')}</Text>
+          <View style={styles.calcRow}>
+            <Text style={styles.calcLabel}>{t('budgetLabel')}</Text>
+            <Text style={styles.calcValue}>{formatMoney(state.budget)}</Text>
+          </View>
+          <View style={styles.calcRow}>
+            <Text style={styles.calcLabel}>{t('totalSpentLabel')}</Text>
+            <Text style={[styles.calcValue, styles.negative]}>
+              − {formatMoney(totalCost)}
+            </Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={styles.calcRow}>
+            <Text style={[styles.calcLabel, { fontWeight: '700' }]}>{t('balanceLabel')}</Text>
+            <Text
+              style={[
+                styles.calcValue,
+                { fontWeight: '700' },
+                isOverBudget ? styles.negative : styles.positive,
+              ]}
+            >
+              {formatMoney(remainingBudget)}
+            </Text>
+          </View>
+          {isOverBudget && (
+            <Text style={styles.overBudgetWarning}>
+              {t('overBudgetWarning', { amount: formatMoney(Math.abs(remainingBudget)) })}
+            </Text>
+          )}
         </View>
-        <View style={styles.calcRow}>
-          <Text style={styles.calcLabel}>Total gasto:</Text>
-          <Text style={[styles.calcValue, styles.negative]}>− R$ {totalCost.toFixed(2).replace('.', ',')}</Text>
-        </View>
-        <View style={styles.divider} />
-        <View style={styles.calcRow}>
-          <Text style={styles.calcLabel}>Saldo:</Text>
-          <Text style={[styles.calcValue, isOverBudget ? styles.negative : styles.positive]}>
-            R$ {remainingBudget.toFixed(2).replace('.', ',')}
-          </Text>
-        </View>
-      </View>
-
-      {totalItems > 0 && (
-        <TouchableOpacity style={styles.clearButton} onPress={handleClear}>
-          <Text style={styles.clearButtonText}>Limpar Lista</Text>
-        </TouchableOpacity>
       )}
+
+      {/* Botão limpar lista */}
+      <TouchableOpacity style={styles.clearButton} onPress={handleClear}>
+        <Text style={styles.clearButtonText}>{t('clearList')}</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     backgroundColor: '#fff',
     borderTopLeftRadius: 16,
     borderTopRightRadius: 16,
-    padding: 16,
-    paddingBottom: 24,
+    padding: 10,
+    paddingBottom: 14,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
     shadowOpacity: 0.1,
@@ -84,19 +122,32 @@ const styles = StyleSheet.create({
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginBottom: 16,
+    alignItems: 'center',
+    marginBottom: 8,
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 6,
+  },
+  summaryDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#e5e7eb',
   },
   summaryItem: {
     alignItems: 'center',
+    flex: 1,
   },
   summaryLabel: {
-    fontSize: 12,
+    fontSize: 10,
     color: '#6b7280',
-    marginBottom: 2,
+    marginBottom: 1,
     fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.2,
   },
   summaryValue: {
-    fontSize: 18,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#1f2937',
   },
@@ -108,35 +159,35 @@ const styles = StyleSheet.create({
   },
   calculator: {
     backgroundColor: '#f9fafb',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 12,
+    borderRadius: 8,
+    padding: 8,
+    marginBottom: 8,
   },
   calculatorTitle: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: 'bold',
     color: '#374151',
-    marginBottom: 8,
+    marginBottom: 4,
     textAlign: 'center',
   },
   calcRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 4,
+    marginBottom: 2,
   },
   calcLabel: {
-    fontSize: 14,
+    fontSize: 12,
     color: '#6b7280',
   },
   calcValue: {
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
     color: '#1f2937',
   },
   divider: {
     height: 1,
     backgroundColor: '#e5e7eb',
-    marginVertical: 8,
+    marginVertical: 4,
   },
   positive: {
     color: '#059669',
@@ -144,15 +195,22 @@ const styles = StyleSheet.create({
   negative: {
     color: '#ef4444',
   },
+  overBudgetWarning: {
+    marginTop: 4,
+    fontSize: 11,
+    color: '#ef4444',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
   clearButton: {
     backgroundColor: '#fee2e2',
-    padding: 12,
+    padding: 8,
     borderRadius: 8,
     alignItems: 'center',
   },
   clearButtonText: {
     color: '#ef4444',
     fontWeight: '600',
-    fontSize: 14,
+    fontSize: 13,
   },
 });

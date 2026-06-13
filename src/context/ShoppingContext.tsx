@@ -1,8 +1,26 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Product, ShoppingState } from '../types';
+
+// AsyncStorage importado de forma segura (será null se o pacote não estiver instalado)
+let AsyncStorage: any = null;
+try {
+  AsyncStorage = require('@react-native-async-storage/async-storage').default;
+} catch {
+  // Pacote não instalado — dados não serão persistidos
+  console.warn('[ShoppingContext] AsyncStorage não encontrado. Execute: npx expo install @react-native-async-storage/async-storage');
+}
+
+const STORAGE_KEY = '@meu_carrinho:state';
+
+const INITIAL_STATE: ShoppingState = {
+  marketName: '',
+  budget: 0,
+  products: [],
+};
 
 interface ShoppingContextType {
   state: ShoppingState;
+  isLoading: boolean;
   setMarketName: (name: string) => void;
   setBudget: (budget: number) => void;
   addProduct: (product: Omit<Product, 'id'>) => void;
@@ -17,11 +35,43 @@ interface ShoppingContextType {
 const ShoppingContext = createContext<ShoppingContextType | undefined>(undefined);
 
 export function ShoppingProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<ShoppingState>({
-    marketName: '',
-    budget: 0,
-    products: [],
-  });
+  const [state, setState] = useState<ShoppingState>(INITIAL_STATE);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Carrega o estado salvo ao iniciar o app
+  useEffect(() => {
+    const loadState = async () => {
+      if (!AsyncStorage) {
+        setIsLoading(false);
+        return;
+      }
+      try {
+        const saved = await AsyncStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved) as ShoppingState;
+          setState(parsed);
+        }
+      } catch (error) {
+        console.warn('[ShoppingContext] Erro ao carregar estado:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadState();
+  }, []);
+
+  // Salva o estado sempre que mudar
+  useEffect(() => {
+    if (isLoading || !AsyncStorage) return;
+    const saveState = async () => {
+      try {
+        await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (error) {
+        console.warn('[ShoppingContext] Erro ao salvar estado:', error);
+      }
+    };
+    saveState();
+  }, [state, isLoading]);
 
   const setMarketName = useCallback((name: string) => {
     setState((prev) => ({ ...prev, marketName: name }));
@@ -32,12 +82,11 @@ export function ShoppingProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addProduct = useCallback((product: Omit<Product, 'id'>) => {
-    // Gerando um ID único mais robusto sem bibliotecas externas para manter simplicidade
     const newProduct: Product = {
       ...product,
       id: Math.random().toString(36).substring(2, 15) + Date.now().toString(36),
     };
-    // Adicionando no topo da lista (conforme solicitado anteriormente)
+    // Adiciona no topo da lista
     setState((prev) => ({ ...prev, products: [newProduct, ...prev.products] }));
   }, []);
 
@@ -67,6 +116,7 @@ export function ShoppingProvider({ children }: { children: React.ReactNode }) {
     <ShoppingContext.Provider
       value={{
         state,
+        isLoading,
         setMarketName,
         setBudget,
         addProduct,

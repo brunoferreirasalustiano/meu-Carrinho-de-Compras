@@ -1,94 +1,103 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, StyleSheet } from 'react-native';
 import { useShopping } from '../context/ShoppingContext';
+import { useTranslation } from '../i18n/useTranslation';
 
 export default function Header() {
+  const { t } = useTranslation();
   const { state, setMarketName, setBudget } = useShopping();
   const [budgetText, setBudgetText] = useState('');
 
-  // Sincroniza apenas quando o valor global muda externamente
+  // Sincroniza o texto quando o budget muda externamente (ex: limpar lista)
   useEffect(() => {
-    const formatted = state.budget > 0 ? state.budget.toFixed(2).replace('.', ',') : '';
-    if (formatted !== budgetText && !isNaN(parseFloat(budgetText.replace(',', '.')))) {
-       // Não atualiza se o usuário estiver digitando algo válido
-    } else {
-       setBudgetText(formatted);
-    }
+    const formatted = state.budget > 0
+      ? state.budget.toFixed(2).replace('.', ',')
+      : '';
+    setBudgetText(formatted);
   }, [state.budget]);
+
+  const handleBudgetChange = (text: string) => {
+    // Permite apenas números, vírgula e ponto
+    const cleaned = text.replace(/[^0-9,\.]/g, '');
+    setBudgetText(cleaned);
+  };
 
   const handleBudgetBlur = () => {
     const value = parseFloat(budgetText.replace(',', '.'));
-    const finalValue = isNaN(value) ? 0 : value;
+    const finalValue = isNaN(value) || value < 0 ? 0 : value;
     setBudget(finalValue);
     setBudgetText(finalValue > 0 ? finalValue.toFixed(2).replace('.', ',') : '');
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>🛒 Meu Carrinho</Text>
-      
-      <View style={styles.row}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Nome do Mercado</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Ex: Supermercado X"
-            value={state.marketName}
-            onChangeText={setMarketName}
-          />
-        </View>
-      </View>
+      <Text style={styles.title}>{t('appTitle')}</Text>
 
       <View style={styles.row}>
-        <View style={styles.inputContainer}>
-          <Text style={styles.label}>Valor Disponível (R$)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="0,00"
-            keyboardType="decimal-pad"
-            value={budgetText}
-            onChangeText={setBudgetText}
-            onBlur={handleBudgetBlur}
-          />
-        </View>
-      </View>
+  <View style={[styles.inputContainer, { marginRight: 8 }]}>
+  <Text style={styles.label}>{t('market')}</Text>
+  <TextInput
+    style={styles.input}
+    value={state.marketName}
+    onChangeText={setMarketName}
+  />
+</View>
+
+  <View style={styles.inputContainer}>
+  <Text style={styles.label}>{t('budget')}</Text>
+  <TextInput
+    style={styles.input}
+    keyboardType="decimal-pad"
+    value={budgetText}
+    onChangeText={handleBudgetChange}
+    onBlur={handleBudgetBlur}
+  />
+</View>
+</View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#2563eb',
-    padding: 16,
-    paddingTop: 40,
-    borderBottomLeftRadius: 16,
-    borderBottomRightRadius: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  row: {
-    marginBottom: 12,
-  },
-  inputContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    padding: 8,
-    paddingHorizontal: 12,
-  },
-  label: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginBottom: 4,
-    fontWeight: '600',
-  },
-  input: {
-    fontSize: 16,
-    color: '#1f2937',
-    padding: 0,
-  },
+  backgroundColor: '#2563eb',
+  padding: 12,
+  paddingTop: 20,
+  borderBottomLeftRadius: 16,
+  borderBottomRightRadius: 16,
+},
+
+title: {
+  fontSize: 20,
+  fontWeight: 'bold',
+  color: '#fff',
+  textAlign: 'center',
+  marginBottom: 10,
+},
+
+row: {
+  flexDirection: 'row',
+  marginBottom: 8,
+},
+
+inputContainer: {
+  flex: 1,
+  backgroundColor: '#fff',
+  borderRadius: 8,
+  padding: 6,
+  paddingHorizontal: 10,
+},
+
+label: {
+  fontSize: 11,
+  color: '#6b7280',
+  marginBottom: 2,
+  fontWeight: '600',
+},
+
+input: {
+  fontSize: 16,
+  color: '#1f2937',
+  padding: 0,
+},
 });

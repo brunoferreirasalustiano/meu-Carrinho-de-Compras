@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { SafeAreaView, SafeAreaProvider } from 'react-native-safe-area-context';
 import { ShoppingProvider } from './src/context/ShoppingContext';
 import Header from './src/components/Header';
@@ -10,9 +10,16 @@ import Footer from './src/components/Footer';
 function AppContent() {
   return (
     <SafeAreaView style={styles.container}>
+      {/* Topo fixo — não rola */}
       <Header />
       <AddProductForm />
-      <ProductList />
+
+      {/* Área do meio — só ela rola */}
+      <View style={styles.listArea}>
+        <ProductList />
+      </View>
+
+      {/* Footer fixo na base */}
       <Footer />
     </SafeAreaView>
   );
@@ -32,5 +39,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f3f4f6',
+    position: 'relative',
+  },
+  listArea: {
+    flex: 1,
+    overflow: 'hidden',
   },
 });

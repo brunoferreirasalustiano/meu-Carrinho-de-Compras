@@ -7,32 +7,49 @@ import {
   StyleSheet,
 } from 'react-native';
 import { useShopping } from '../context/ShoppingContext';
+import { useTranslation } from '../i18n/useTranslation';
+import { useCurrency } from '../utils/formatMoney';
 import { commonProducts } from '../data/commonProducts';
 
 export default function AddProductForm() {
+  const { t } = useTranslation();
+  const { symbol } = useCurrency();
   const { addProduct } = useShopping();
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('1');
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [priceError, setPriceError] = useState(false);
 
   const handleAdd = () => {
     if (!name.trim()) return;
+
     const priceValue = parseFloat(price.replace(',', '.'));
-    const qtyValue = parseInt(quantity) || 1;
+    const qtyValue = parseInt(quantity, 10) || 1;
+
+    // Alerta visual se preço for 0 ou vazio
+    if (!price.trim() || isNaN(priceValue) || priceValue <= 0) {
+      setPriceError(true);
+      setTimeout(() => setPriceError(false), 2000);
+      // Adiciona mesmo assim com preço 0, mas avisa o usuário visualmente
+    }
+
     addProduct({
       name: name.trim(),
-      price: isNaN(priceValue) ? 0 : priceValue,
+      price: isNaN(priceValue) || priceValue < 0 ? 0 : priceValue,
       quantity: qtyValue,
     });
+
     setName('');
     setPrice('');
     setQuantity('1');
     setSuggestions([]);
+    setPriceError(false);
   };
 
   const handleNameChange = (text: string) => {
     setName(text);
+
     if (text.trim().length >= 2) {
       const filtered = commonProducts
         .filter((item) =>
@@ -53,24 +70,30 @@ export default function AddProductForm() {
 
   return (
     <View style={styles.addForm}>
-      <Text style={styles.addTitle}>➕ Adicionar Produto</Text>
-      <View style={[styles.addRow, { zIndex: 10 }]}>
+      <Text style={styles.addTitle}>{t('addProduct')}</Text>
+
+      <View style={[styles.addRow, styles.suggestionRow]}>
         <View style={styles.nameInputContainer}>
           <TextInput
             style={[styles.addInput, styles.addNameInput]}
-            placeholder="Nome do produto"
+            placeholder={t('productNamePlaceholder')}
+            placeholderTextColor="#9ca3af"
             value={name}
             onChangeText={handleNameChange}
             onBlur={() => {
               setTimeout(() => setSuggestions([]), 200);
             }}
           />
+
           {suggestions.length > 0 && (
             <View style={styles.suggestionsContainer}>
               {suggestions.map((item, index) => (
                 <TouchableOpacity
-                  key={index}
-                  style={styles.suggestionItem}
+                  key={`${item}-${index}`}
+                  style={[
+                    styles.suggestionItem,
+                    index === suggestions.length - 1 && styles.suggestionItemLast,
+                  ]}
                   onPress={() => handleSelectSuggestion(item)}
                 >
                   <Text style={styles.suggestionText}>{item}</Text>
@@ -80,23 +103,33 @@ export default function AddProductForm() {
           )}
         </View>
       </View>
-      <View style={[styles.addRow, { zIndex: 1 }]}>
+
+      <View style={styles.addRow}>
         <TextInput
-          style={[styles.addInput, styles.addPriceInput]}
-          placeholder="Preço (R$)"
+          style={[
+            styles.addInput,
+            styles.addPriceInput,
+            priceError && styles.addInputError,
+          ]}
+          placeholder={priceError ? `${t('priceErrorPlaceholder')} (${symbol})` : `${t('pricePlaceholder')} (${symbol})`}
+          placeholderTextColor={priceError ? '#ef4444' : '#9ca3af'}
           keyboardType="decimal-pad"
           value={price}
-          onChangeText={setPrice}
+          onChangeText={(text) => {
+            setPrice(text);
+            if (priceError) setPriceError(false);
+          }}
         />
         <TextInput
           style={[styles.addInput, styles.addQtyInput]}
-          placeholder="Qtd"
+          placeholder={t('qtyPlaceholder')}
+          placeholderTextColor="#9ca3af"
           keyboardType="number-pad"
           value={quantity}
           onChangeText={setQuantity}
         />
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
-          <Text style={styles.addButtonText}>Adicionar</Text>
+          <Text style={styles.addButtonText}>{t('addButton')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -108,7 +141,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     margin: 12,
     padding: 12,
-    borderRadius: 12,
+    borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -117,7 +150,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   addTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: 'bold',
     color: '#374151',
     marginBottom: 8,
@@ -125,7 +158,10 @@ const styles = StyleSheet.create({
   addRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: 8,
+  },
+  suggestionRow: {
+    zIndex: 10,
   },
   nameInputContainer: {
     flex: 1,
@@ -135,17 +171,23 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#e5e7eb',
     borderRadius: 8,
-    padding: 8,
-    fontSize: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 44,
+    fontSize: 16,
     color: '#1f2937',
+  },
+  addInputError: {
+    borderColor: '#ef4444',
+    backgroundColor: '#fff5f5',
   },
   addNameInput: {
     flex: 1,
-    marginBottom: 8,
+    width: '100%',
   },
   suggestionsContainer: {
     position: 'absolute',
-    top: 40,
+    top: 48,
     left: 0,
     right: 0,
     backgroundColor: '#fff',
@@ -165,28 +207,38 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#f3f4f6',
   },
+  suggestionItemLast: {
+    borderBottomWidth: 0,
+  },
   suggestionText: {
-    fontSize: 14,
+    fontSize: 15,
     color: '#1f2937',
   },
   addPriceInput: {
     flex: 1,
     marginRight: 8,
+    minWidth: 0,
+    flexShrink: 1,
   },
   addQtyInput: {
-    width: 50,
+    width: 48,
     marginRight: 8,
     textAlign: 'center',
+    flexShrink: 0,
   },
   addButton: {
     backgroundColor: '#2563eb',
-    paddingHorizontal: 16,
+    minHeight: 44,
+    paddingHorizontal: 10,
     paddingVertical: 10,
     borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   addButtonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 13,
   },
 });
