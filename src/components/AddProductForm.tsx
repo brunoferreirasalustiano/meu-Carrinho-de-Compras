@@ -78,7 +78,7 @@ export default function AddProductForm() {
               ))}
             </View>
           )}
-        </div>
+        </View>
       </View>
       <View style={[styles.addRow, { zIndex: 1 }]}>
         <TextInput
