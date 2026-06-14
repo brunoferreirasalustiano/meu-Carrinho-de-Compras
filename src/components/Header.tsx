@@ -17,8 +17,24 @@ export default function Header() {
   }, [state.budget]);
 
   const handleBudgetChange = (text: string) => {
-    // Permite apenas números, vírgula e ponto
-    const cleaned = text.replace(/[^0-9,\.]/g, '');
+    // Permite apenas números, vírgula e ponto; no máximo um separador decimal
+    let cleaned = text.replace(/[^0-9.,]/g, '');
+    const firstDot = cleaned.indexOf('.');
+    const firstComma = cleaned.indexOf(',');
+    if (firstDot !== -1 && firstComma !== -1) {
+      // Mantém o que vier primeiro como separador, remove o outro
+      if (firstDot < firstComma) {
+        cleaned = cleaned.replace(/,/g, '');
+      } else {
+        cleaned = cleaned.replace(/\./g, '');
+      }
+    }
+    // Remove separadores extras do mesmo tipo
+    const sep = cleaned.includes('.') ? '.' : cleaned.includes(',') ? ',' : null;
+    if (sep) {
+      const parts = cleaned.split(sep);
+      cleaned = parts[0] + sep + parts.slice(1).join('');
+    }
     setBudgetText(cleaned);
   };
 
@@ -40,6 +56,8 @@ export default function Header() {
     style={styles.input}
     value={state.marketName}
     onChangeText={setMarketName}
+    placeholder={t('marketPlaceholder')}
+    placeholderTextColor="#9ca3af"
   />
 </View>
 

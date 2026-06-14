@@ -23,6 +23,26 @@ export default function ProductItem({ product }: ProductItemProps) {
     setPriceText(formatted);
   }, [product.price]);
 
+  const handlePriceChange = (text: string) => {
+    // Permite apenas números, vírgula e ponto; no máximo um separador decimal
+    let cleaned = text.replace(/[^0-9.,]/g, '');
+    const firstDot = cleaned.indexOf('.');
+    const firstComma = cleaned.indexOf(',');
+    if (firstDot !== -1 && firstComma !== -1) {
+      if (firstDot < firstComma) {
+        cleaned = cleaned.replace(/,/g, '');
+      } else {
+        cleaned = cleaned.replace(/\./g, '');
+      }
+    }
+    const sep = cleaned.includes('.') ? '.' : cleaned.includes(',') ? ',' : null;
+    if (sep) {
+      const parts = cleaned.split(sep);
+      cleaned = parts[0] + sep + parts.slice(1).join('');
+    }
+    setPriceText(cleaned);
+  };
+
   const handlePriceBlur = () => {
     const value = parseFloat(priceText.replace(',', '.'));
     updateProduct(product.id, { price: isNaN(value) || value < 0 ? 0 : value });
@@ -74,7 +94,7 @@ export default function ProductItem({ product }: ProductItemProps) {
             style={styles.input}
             keyboardType="decimal-pad"
             value={priceText}
-            onChangeText={setPriceText}
+            onChangeText={handlePriceChange}
             onBlur={handlePriceBlur}
             placeholder={`0,00`}
             placeholderTextColor="#9ca3af"
@@ -105,12 +125,13 @@ export default function ProductItem({ product }: ProductItemProps) {
               keyboardType="number-pad"
               value={product.quantity.toString()}
               onChangeText={(text) => {
-                // Não faz nada enquanto o campo está vazio (usuário apagando para redigitar)
-                if (text === '') return;
-                const value = parseInt(text, 10);
+                // Remove tudo que não é dígito
+                const cleaned = text.replace(/[^0-9]/g, '');
+                if (cleaned === '') return;
+                const value = parseInt(cleaned, 10);
                 if (!isNaN(value) && value > 0) {
                   updateProduct(product.id, { quantity: value });
-                } else if (!isNaN(value) && value === 0) {
+                } else if (value === 0) {
                   // Remove o produto se o usuário digitar explicitamente 0
                   removeProduct(product.id);
                 }

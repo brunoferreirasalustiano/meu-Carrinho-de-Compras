@@ -37,7 +37,7 @@ export default function AddProductForm() {
     addProduct({
       name: name.trim(),
       price: isNaN(priceValue) || priceValue < 0 ? 0 : priceValue,
-      quantity: qtyValue,
+      quantity: qtyValue > 0 ? qtyValue : 1,
     });
 
     setName('');
@@ -63,9 +63,42 @@ export default function AddProductForm() {
     }
   };
 
+  const handleBlurName = () => {
+    setTimeout(() => setSuggestions([]), 200);
+  };
+
   const handleSelectSuggestion = (suggestion: string) => {
     setName(suggestion);
     setSuggestions([]);
+  };
+
+  const sanitizePrice = (text: string) => {
+    let cleaned = text.replace(/[^0-9.,]/g, '');
+    const firstDot = cleaned.indexOf('.');
+    const firstComma = cleaned.indexOf(',');
+    if (firstDot !== -1 && firstComma !== -1) {
+      if (firstDot < firstComma) {
+        cleaned = cleaned.replace(/,/g, '');
+      } else {
+        cleaned = cleaned.replace(/\./g, '');
+      }
+    }
+    const sep = cleaned.includes('.') ? '.' : cleaned.includes(',') ? ',' : null;
+    if (sep) {
+      const parts = cleaned.split(sep);
+      cleaned = parts[0] + sep + parts.slice(1).join('');
+    }
+    return cleaned;
+  };
+
+  const handlePriceChange = (text: string) => {
+    setPrice(sanitizePrice(text));
+    if (priceError) setPriceError(false);
+  };
+
+  const handleQtyChange = (text: string) => {
+    const cleaned = text.replace(/[^0-9]/g, '');
+    setQuantity(cleaned === '' ? '' : cleaned);
   };
 
   return (
@@ -80,9 +113,7 @@ export default function AddProductForm() {
             placeholderTextColor="#9ca3af"
             value={name}
             onChangeText={handleNameChange}
-            onBlur={() => {
-              setTimeout(() => setSuggestions([]), 200);
-            }}
+            onBlur={handleBlurName}
           />
 
           {suggestions.length > 0 && (
@@ -94,7 +125,7 @@ export default function AddProductForm() {
                     styles.suggestionItem,
                     index === suggestions.length - 1 && styles.suggestionItemLast,
                   ]}
-                  onPress={() => handleSelectSuggestion(item)}
+                  onPressIn={() => handleSelectSuggestion(item)}
                 >
                   <Text style={styles.suggestionText}>{item}</Text>
                 </TouchableOpacity>
@@ -115,10 +146,7 @@ export default function AddProductForm() {
           placeholderTextColor={priceError ? '#ef4444' : '#9ca3af'}
           keyboardType="decimal-pad"
           value={price}
-          onChangeText={(text) => {
-            setPrice(text);
-            if (priceError) setPriceError(false);
-          }}
+          onChangeText={handlePriceChange}
         />
         <TextInput
           style={[styles.addInput, styles.addQtyInput]}
@@ -126,7 +154,7 @@ export default function AddProductForm() {
           placeholderTextColor="#9ca3af"
           keyboardType="number-pad"
           value={quantity}
-          onChangeText={setQuantity}
+          onChangeText={handleQtyChange}
         />
         <TouchableOpacity style={styles.addButton} onPress={handleAdd}>
           <Text style={styles.addButtonText}>{t('addButton')}</Text>

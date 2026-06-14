@@ -4,6 +4,7 @@ export const translations = {
   pt: {
     appTitle: '🛒 Meu Carrinho',
     market: 'Mercado',
+    marketPlaceholder: 'Ex: Mercado Central',
     budget: 'Orçamento',
     addProduct: '➕ Adicionar Produto',
     productNamePlaceholder: 'Nome do produto',
@@ -36,6 +37,7 @@ export const translations = {
   en: {
     appTitle: '🛒 My Shopping Cart',
     market: 'Market',
+    marketPlaceholder: 'Ex: Central Market',
     budget: 'Budget',
     addProduct: '➕ Add Product',
     productNamePlaceholder: 'Product name',
@@ -68,6 +70,7 @@ export const translations = {
   es: {
     appTitle: '🛒 Mi Carrito',
     market: 'Mercado',
+    marketPlaceholder: 'Ej: Mercado Central',
     budget: 'Presupuesto',
     addProduct: '➕ Agregar Producto',
     productNamePlaceholder: 'Nombre del producto',

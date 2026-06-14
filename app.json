@@ -5,6 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#FFFFFF"
+    },
     "userInterfaceStyle": "light",
     "assetBundlePatterns": ["**/*"],
     "ios": {
@@ -12,7 +17,12 @@
       "bundleIdentifier": "com.corey.meucarrinho"
     },
     "android": {
-      "package": "com.corey.meucarrinho"
+      "package": "com.corey.meucarrinho",
+      "versionCode": 2,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
     },
     "extra": {
       "eas": {

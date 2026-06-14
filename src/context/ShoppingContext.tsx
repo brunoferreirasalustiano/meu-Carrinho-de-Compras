@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import { Product, ShoppingState } from '../types';
 
 // AsyncStorage importado de forma segura (será null se o pacote não estiver instalado)
@@ -108,9 +108,9 @@ export function ShoppingProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, products: [] }));
   }, []);
 
-  const totalItems = state.products.reduce((sum, p) => sum + p.quantity, 0);
-  const totalCost = state.products.reduce((sum, p) => sum + p.price * p.quantity, 0);
-  const remainingBudget = state.budget - totalCost;
+  const totalItems = useMemo(() => state.products.reduce((sum, p) => sum + p.quantity, 0), [state.products]);
+  const totalCost = useMemo(() => state.products.reduce((sum, p) => sum + p.price * p.quantity, 0), [state.products]);
+  const remainingBudget = useMemo(() => state.budget - totalCost, [state.budget, totalCost]);
 
   return (
     <ShoppingContext.Provider
