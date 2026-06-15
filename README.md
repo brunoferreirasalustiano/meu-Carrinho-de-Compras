@@ -93,12 +93,6 @@ npm run web       # Inicia no navegador
 ```bash
 # Gerar APK (teste interno)
 eas build --profile preview --platform android
-
-# Gerar AAB (Google Play Store)
-eas build --profile production --platform android
-
-# Enviar para Google Play (requer configuração de Service Account)
-eas submit --platform android
 ```
 
 ---
